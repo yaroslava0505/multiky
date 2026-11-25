@@ -239,3 +239,129 @@ footer.site{
 footer.site .wrap{display:flex;flex-wrap:wrap;gap:8px 24px;justify-content:space-between}
 footer.site a{color:var(--ink-soft)}
 footer.site p{margin:0;max-width:70ch}
+
+/* ---------- illustrated home ---------- */
+.cinema-home{
+  --ink:#36190f;
+  --ink-soft:#5c4134;
+  --ink-faint:#695044;
+  --ground:#fff8ee;
+  --surface:#fffdf7;
+  --line:#dcbfa5;
+  --line-soft:#eedbc7;
+  --accent:#ffbd58;
+  --accent-ink:#36190f;
+  --focus:#a14a09;
+  --t-friend:#24664a; --t-help:#315d91; --t-feel:#684692; --t-kind:#236976;
+  --t-brave:#963f23; --t-family:#775707; --t-self:#8a345d; --t-loss:#4a6428;
+  background:var(--ground);
+  color:var(--ink);
+  color-scheme:light;
+  min-height:100vh;
+}
+.cinema-home .wrap{max-width:1320px}
+.cinema-hero{
+  display:flex;
+  align-items:center;
+  min-height:220px;
+  margin:20px 0 6px;
+  border-radius:22px;
+  background:
+    linear-gradient(90deg,#fff0d9 35%,transparent 70%),
+    url("art/hero.webp") right center / auto 100% no-repeat,
+    #fff0d9;
+}
+.cinema-intro{padding:30px clamp(20px,4vw,56px);max-width:66%}
+.cinema-intro .lede{max-width:39ch;margin-top:14px}
+.cinema-home .toolbar{position:static}
+.cinema-home :is(.search,.seg,select){border-radius:12px}
+.cinema-home .seg button[aria-pressed="true"]{color:var(--accent-ink)}
+.cinema-home .theme-list{
+  display:grid;
+  grid-template-columns:repeat(4,minmax(0,1fr));
+  gap:14px;
+  margin:18px 0 8px;
+}
+.cinema-home .theme-btn{
+  display:block;
+  overflow:hidden;
+  width:100%;
+  padding:0;
+  border:1px solid var(--line);
+  border-radius:14px;
+  background:var(--surface);
+  color:var(--ink);
+  text-align:left;
+  box-shadow:0 2px 5px #5c301117;
+}
+.cinema-home .theme-btn:hover{border-color:var(--focus)}
+.cinema-home .theme-btn[aria-pressed="true"]{
+  border-color:var(--focus);
+  outline:2px solid var(--focus);
+  background:#ffe5be;
+}
+.cinema-home .theme-btn img{display:block;width:100%;height:auto;aspect-ratio:2.35;object-fit:cover}
+.theme-name{
+  display:flex;
+  align-items:center;
+  gap:8px;
+  min-height:52px;
+  padding:8px 12px;
+  font-family:var(--display);
+  font-weight:800;
+  font-size:clamp(14px,1.5vw,21px);
+}
+.cinema-home .theme-btn .n{color:var(--ink-faint)}
+.cinema-home .reset{margin:8px 0}
+.cinema-program{margin-top:20px}
+.cinema-program>h2{font:800 clamp(26px,4vw,38px)/1.2 var(--display);margin:0 0 8px}
+.cinema-home .grid{grid-template-columns:repeat(3,minmax(0,1fr));gap:16px}
+.cinema-home .item{padding:18px;border-radius:12px;background:var(--surface)}
+@media(max-width:900px){
+  .cinema-home .theme-list,.cinema-home .grid{grid-template-columns:repeat(2,minmax(0,1fr))}
+}
+@media(max-width:570px){
+  .cinema-hero{
+    align-items:flex-end;
+    min-height:290px;
+    background:
+      linear-gradient(0deg,#fff0d9 38%,transparent 77%),
+      url("art/hero.webp") center top / auto 68% no-repeat,
+      #fff0d9;
+  }
+  .cinema-intro{max-width:none;padding:18px}
+  .cinema-home .theme-list{gap:10px}
+  .theme-name{padding:8px;min-height:50px}
+  .cinema-home .grid{grid-template-columns:1fr}
+}
+.cinema-selection{
+  display:grid;
+  grid-template-columns:repeat(2,minmax(0,1fr));
+  gap:20px;
+  margin:0 0 26px;
+}
+.cinema-selection[hidden]{display:none}
+.cinema-selection h3{font:800 20px/1.25 var(--display);margin:4px 0 10px}
+.cinema-selection ul{
+  display:grid;
+  grid-template-columns:repeat(3,minmax(0,1fr));
+  gap:10px;
+  margin:0;
+  padding:0;
+  list-style:none;
+}
+.cinema-selection a{
+  display:flex;
+  flex-direction:column;
+  height:100%;
+  overflow:hidden;
+  border:1px solid var(--line);
+  border-radius:12px;
+  background:var(--surface);
+  text-decoration:none;
+}
+.cinema-selection a:hover strong{text-decoration:underline}
+.cinema-selection img{display:block;width:100%;height:auto;aspect-ratio:234/123;object-fit:cover}
+.cinema-selection strong{padding:8px 8px 2px;font:800 15px/1.2 var(--display);overflow-wrap:anywhere}
+.cinema-selection small{margin-top:auto;padding:2px 8px 8px;color:var(--ink-soft)}
+@media(max-width:760px){.cinema-selection{grid-template-columns:1fr}}
