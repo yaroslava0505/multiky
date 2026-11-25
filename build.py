@@ -14,7 +14,7 @@ from datetime import date
 
 ROOT = os.path.dirname(os.path.abspath(__file__))
 OUT = os.path.join(ROOT, "docs")
-SITE_URL = "https://ЗАМІНІТЬ-НА-СВІЙ-ЛОГІН.github.io/multiky"  # без / в кінці
+SITE_URL = "https://yaroslava0505.github.io/multiky"  # без / в кінці
 SITE_NAME = "Мультфільми за темами"
 FONTS = ("https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;"
          "12..96,700;12..96,800&family=Spectral:ital,wght@0,400;0,600;1,400&"
