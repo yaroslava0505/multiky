@@ -9,7 +9,7 @@
 Щоб додати мультфільм: допишіть обʼєкт у масив "items" у data.json і запустіть збірку.
 Адресу сайту задайте у SITE_URL — від неї залежать canonical і sitemap.xml.
 """
-import json, os, re, shutil, html
+import io, json, os, re, shutil, html
 from datetime import date
 
 ROOT = os.path.dirname(os.path.abspath(__file__))
@@ -20,10 +20,44 @@ FONTS = ("https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght
          "12..96,700;12..96,800&family=Spectral:ital,wght@0,400;0,600;1,400&"
          "family=IBM+Plex+Mono:wght@400;500&display=swap")
 
-data = json.load(open(os.path.join(ROOT, "data.json"), encoding="utf-8"))
-THEMES = data["themes"]
-SERVICES = data["services"]
-ITEMS = data["items"]
+def load_data_js():
+    """data.js — єдине джерело даних. Дістаємо з нього два JSON-літерали."""
+    src = io.open(os.path.join(ROOT, "src", "data.js"), encoding="utf-8").read()
+    def grab(name):
+        start = src.index("const %s = " % name) + len("const %s = " % name)
+        end = src.index("\n;", start) if "\n;" in src[start:start + 10] else None
+        depth, i = 0, start
+        while i < len(src):
+            if src[i] in "[{":
+                depth += 1
+            elif src[i] in "]}":
+                depth -= 1
+                if depth == 0:
+                    return json.loads(src[start:i + 1])
+            i += 1
+        raise ValueError("не вдалося розібрати " + name)
+    return grab("CATALOG_META"), grab("MOVIES")
+
+
+def available_posters():
+    art = os.path.join(ROOT, "src", "art")
+    if not os.path.isdir(art):
+        return set()
+    return {os.path.splitext(f)[0] for f in os.listdir(art) if f.endswith(".webp")}
+
+
+POSTERS = available_posters()
+META, MOVIES = load_data_js()
+THEMES = META["themes"]
+SERVICES = META["services"]
+
+# генератор сторінок працює зі старими короткими ключами — перекладаємо
+ITEMS = [{
+    "slug": m["id"], "t": m["title"], "o": m["originalTitle"], "y": m["year"],
+    "co": m["country"], "f": "series" if m["format"] in ("short", "series") else "film",
+    "d": m["duration"], "age": m["ageMin"], "th": m["themes"], "desc": m["description"],
+    "more": m["value"], "ask": m["question"], "sv": m["service"], "poster": m["poster"],
+} for m in MOVIES]
 TH = {t["k"]: t for t in THEMES}
 pages = []  # (шлях, пріоритет) для sitemap
 
@@ -112,8 +146,9 @@ def theme_rail(prefix, active_slug=None, as_links=True):
                         f'<span class="n">{theme_count(t["k"])}</span></a>')
         else:
             rows.append(f'<button type="button" class="theme-btn" {attrs} aria-pressed="false" '
-                        f'data-k="{t["k"]}"><span class="dot"></span><span>{e(t["label"])}</span>'
-                        f'<span class="n">{theme_count(t["k"])}</span></button>')
+                        f'data-k="{t["k"]}"><img src="art/{t["k"]}.webp" alt="" width="360" height="152">'
+                        f'<span class="theme-name"><span>{e(t["label"])}</span>'
+                        f'<span class="n">{theme_count(t["k"])}</span></span></button>')
     return "\n".join(rows)
 
 
@@ -161,178 +196,14 @@ def write(path, content):
 
 # ---------------------------------------------------------------- головна
 def build_home():
-    items_json = json.dumps([
-        {"slug": i["slug"], "t": i["t"], "o": i["o"], "y": i["y"], "co": i["co"], "f": i["f"],
-         "d": i["d"], "age": i["age"], "th": i["th"], "desc": i["desc"], "ask": i["ask"],
-         "sv": i["sv"]} for i in ITEMS], ensure_ascii=False)
-    svc_json = json.dumps(SERVICES, ensure_ascii=False)
-    th_json = json.dumps({t["k"]: {"label": t["label"], "slug": t["slug"]} for t in THEMES},
-                         ensure_ascii=False)
-    body = f"""{head(
+    shell = io.open(os.path.join(ROOT, "src", "index.html"), encoding="utf-8").read()
+    shell = shell.replace("__BAR__", bar("", "home")).replace("__FOOTER__", site_footer(""))
+    body = head(
         "Мультфільми за темами — каталог для батьків",
-        "42 мультфільми й серіали, посортовані за темами: про дружбу, про підтримку, про емоції, "
-        "про втрату. Вік, тривалість, де легально дивитися в Україні та питання для розмови після перегляду.",
-        "", "")}
-{bar("", "home")}
-<div class="wrap">
-<header class="page-head">
-  <p class="eyebrow">Каталог для батьків і вихователів · 42 назви · доступність в Україні</p>
-  <h1>Мультфільми, посортовані <em>за темами</em></h1>
-  <p class="lede">Вибирайте не за рейтингом, а за тим, про що потрібно поговорити: <b>про дружбу,
-  про підтримку</b>, про страх, про втрату, про право бути собою. До кожної назви — вік, тривалість,
-  де це легально подивитися в Україні і одне питання для розмови після перегляду.</p>
-</header>
-
-<div class="toolbar">
-  <label class="search">
-    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-      stroke-width="2.2" aria-hidden="true"><circle cx="11" cy="11" r="7"></circle>
-      <path d="M20 20l-4.3-4.3"></path></svg>
-    <input id="q" type="search" placeholder="Назва або слово з опису" aria-label="Пошук за назвою">
-  </label>
-  <div class="seg" role="group" aria-label="Формат">
-    <button data-fmt="all" aria-pressed="true">Усе</button>
-    <button data-fmt="film" aria-pressed="false">Фільми</button>
-    <button data-fmt="series" aria-pressed="false">Серіали</button>
-  </div>
-  <select id="sv" aria-label="Сервіс">
-    <option value="all">Будь-який сервіс</option>
-    <option value="ua">sweet.tv / Megogo</option>
-    <option value="nf">Netflix</option>
-    <option value="atv">Apple TV</option>
-    <option value="free">Безкоштовно на YouTube</option>
-    <option value="rent">Прокат</option>
-  </select>
-  <select id="age" aria-label="Вік">
-    <option value="0">Будь-який вік</option>
-    <option value="4">до 4 років</option>
-    <option value="6">5–6 років</option>
-    <option value="8">7–8 років</option>
-    <option value="99">9 років і старші</option>
-  </select>
-</div>
-
-<div class="shell">
-  <nav class="rail" aria-label="Теми">
-    <p class="rail-title">Теми</p>
-    <div class="theme-list" id="themes">
-{theme_rail("", as_links=False)}
-    </div>
-    <button class="reset" id="reset">Скинути фільтри</button>
-  </nav>
-  <section>
-    <p class="count" id="count"></p>
-    <div class="grid" id="grid">
-{chr(10).join(card(i, "") for i in sorted(ITEMS, key=lambda x: (x["age"], x["t"])))}
-    </div>
-  </section>
-</div>
-</div>
-{site_footer("")}
-<script>
-const ITEMS = {items_json};
-const SERVICES = {svc_json};
-const TH = {th_json};
-const state = {{themes:new Set(), fmt:"all", age:"0", q:"", sv:"all"}};
-const grid = document.getElementById("grid");
-const countEl = document.getElementById("count");
-
-document.querySelectorAll(".theme-btn").forEach(b => b.addEventListener("click", () => {{
-  const k = b.dataset.k;
-  if (state.themes.has(k)) state.themes.delete(k); else state.themes.add(k);
-  b.setAttribute("aria-pressed", state.themes.has(k) ? "true" : "false");
-  render();
-}}));
-document.querySelectorAll(".seg button").forEach(b => b.addEventListener("click", () => {{
-  state.fmt = b.dataset.fmt;
-  document.querySelectorAll(".seg button").forEach(x =>
-    x.setAttribute("aria-pressed", x === b ? "true" : "false"));
-  render();
-}}));
-document.getElementById("sv").addEventListener("change", e => {{ state.sv = e.target.value; render(); }});
-document.getElementById("age").addEventListener("change", e => {{ state.age = e.target.value; render(); }});
-document.getElementById("q").addEventListener("input", e => {{
-  state.q = e.target.value.trim().toLowerCase(); render();
-}});
-document.getElementById("reset").addEventListener("click", () => {{
-  state.themes.clear(); state.fmt = "all"; state.age = "0"; state.q = ""; state.sv = "all";
-  document.getElementById("q").value = "";
-  document.getElementById("age").value = "0";
-  document.getElementById("sv").value = "all";
-  document.querySelectorAll(".theme-btn").forEach(b => b.setAttribute("aria-pressed", "false"));
-  document.querySelectorAll(".seg button").forEach(x =>
-    x.setAttribute("aria-pressed", x.dataset.fmt === "all" ? "true" : "false"));
-  render();
-}});
-
-function ageOk(d) {{
-  const a = state.age;
-  if (a === "0" || a === "99") return true;
-  return d.age <= Number(a);
-}}
-function plural(n) {{
-  const a = n % 10, b = n % 100;
-  if (a === 1 && b !== 11) return "назва";
-  if (a >= 2 && a <= 4 && (b < 12 || b > 14)) return "назви";
-  return "назв";
-}}
-function render() {{
-  const list = ITEMS.filter(d => {{
-    if (state.fmt !== "all" && d.f !== state.fmt) return false;
-    if (!ageOk(d)) return false;
-    if (state.sv !== "all" && SERVICES[d.sv].g !== state.sv) return false;
-    if (state.themes.size && ![...state.themes].every(k => d.th.includes(k))) return false;
-    if (state.q) {{
-      const hay = (d.t + " " + d.o + " " + d.desc + " " + d.co + " " +
-        d.th.map(k => TH[k].label).join(" ")).toLowerCase();
-      if (!hay.includes(state.q)) return false;
-    }}
-    return true;
-  }}).sort((a, b) => a.age - b.age || a.t.localeCompare(b.t, "uk"));
-
-  countEl.textContent = list.length + " " + plural(list.length) +
-    (state.themes.size ? " · " + [...state.themes].map(k => TH[k].label.toLowerCase()).join(" + ") : "");
-
-  grid.innerHTML = "";
-  if (!list.length) {{
-    const p = document.createElement("p");
-    p.className = "empty";
-    p.textContent = "Для такого поєднання фільтрів нічого немає. Спробуйте зняти одну з тем або розширити вік.";
-    grid.appendChild(p);
-    return;
-  }}
-  list.forEach(d => {{
-    const main = d.th[0], sv = SERVICES[d.sv];
-    const art = document.createElement("article");
-    art.className = "item";
-    art.style.setProperty("--c", "var(--t-" + main + ")");
-    const tags = d.th.map(k =>
-      '<a class="tag" style="--tc:var(--t-' + k + ')" href="temy/' + TH[k].slug + '/">' +
-      TH[k].label + '</a>').join("");
-    art.innerHTML =
-      '<p class="meta"><span>' + d.y + '</span><span>·</span><span>' + d.co +
-      '</span><span>·</span><span>' + d.d + '</span><span>·</span><span class="age">' +
-      d.age + '+</span></p>' +
-      '<h2 class="t"><a href="mult/' + d.slug + '/"></a></h2>' +
-      (d.o !== d.t ? '<p class="orig"></p>' : '') +
-      '<p class="desc"></p>' +
-      '<div class="tags">' + tags + '</div>' +
-      '<p class="where"><span>Де шукати</span><b></b><i></i></p>' +
-      '<p class="ask"><span>Питання після перегляду</span></p>';
-    art.querySelector("h2.t a").textContent = d.t;
-    if (d.o !== d.t) art.querySelector(".orig").textContent = d.o;
-    art.querySelector(".desc").textContent = d.desc;
-    art.querySelector(".where b").textContent = sv.n;
-    art.querySelector(".where i").textContent = sv.note;
-    art.querySelector(".ask").appendChild(document.createTextNode(d.ask));
-    grid.appendChild(art);
-  }});
-}}
-render();
-</script>
-</body>
-</html>
-"""
+        "42 мультфільми й серіали з пошуком і фільтрами за віком, темою та форматом: "
+        "чим корисний кожен, де легально дивитися в Україні та що спитати після перегляду.",
+        "", "",
+        extra='<script>window.POSTERS=%s</script>' % json.dumps(sorted(POSTERS))) + "\n" + shell + "\n</body>\n</html>\n"
     write("index.html", body)
     pages.append(("", "1.0"))
 
@@ -406,6 +277,8 @@ def build_item(it):
                     f'<p class="desc">{e(o["desc"])}</p></article>' for o in others)
                 + '</div></section>')
     orig = f'<p class="orig">{e(it["o"])}</p>' if it["o"] != it["t"] else ""
+    poster_img = (f'<img src="../../{e(it["poster"])}" alt="" loading="lazy" '
+                  f'onerror="this.remove()">') if it["slug"] in POSTERS else ""
     body = f"""{head(title, desc, "../../", f'mult/{it["slug"]}/', extra=ld)}
 {bar("../../")}
 <div class="wrap">
@@ -425,6 +298,10 @@ def build_item(it):
     </div>
   </div>
   <aside class="card">
+    <div class="poster poster-detail" style="--c:var(--t-{it["th"][0]})"
+      data-letter="{e(it["t"].strip()[0])}">
+      {poster_img}
+    </div>
     <h2>Коротко</h2>
     <dl class="facts">
       <dt>Рік</dt><dd>{it["y"]}</dd>
@@ -564,7 +441,11 @@ def main():
     if os.path.isdir(OUT):
         shutil.rmtree(OUT)
     os.makedirs(OUT)
-    shutil.copy(os.path.join(ROOT, "src", "style.css"), os.path.join(OUT, "style.css"))
+    for f in ("style.css", "data.js", "app.js"):
+        shutil.copy(os.path.join(ROOT, "src", f), os.path.join(OUT, f))
+    art = os.path.join(ROOT, "src", "art")
+    if os.path.isdir(art):
+        shutil.copytree(art, os.path.join(OUT, "art"))
     open(os.path.join(OUT, ".nojekyll"), "w").close()
     build_home()
     for t in THEMES:

@@ -1,0 +1,86 @@
+<div class="cinema-home">
+__BAR__
+<div class="wrap">
+
+<header class="cinema-hero">
+  <div class="cinema-intro">
+    <p class="eyebrow">Каталог для батьків і вихователів</p>
+    <h1>Кінозали за темами</h1>
+    <p class="lede">Оберіть мультфільм і знайдіть питання для розмови після перегляду.</p>
+  </div>
+</header>
+
+<div class="toolbar" role="search">
+  <label class="search">
+    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="2.2" aria-hidden="true"><circle cx="11" cy="11" r="7"></circle>
+      <path d="M20 20l-4.3-4.3"></path></svg>
+    <input id="q" type="search" autocomplete="off"
+      placeholder="Назва українською, оригінальна назва або слово з опису"
+      aria-label="Пошук мультфільму">
+  </label>
+  <div class="tabs" role="group" aria-label="Список">
+    <button type="button" data-tab="all" aria-pressed="true">Усі</button>
+    <button type="button" data-tab="fav" aria-pressed="false">
+      Збережені <span class="fav-count" id="fav-count">0</span>
+    </button>
+  </div>
+  <button type="button" class="btn-random" id="random">
+    <span aria-hidden="true">🎲</span> Випадковий мультик
+  </button>
+</div>
+
+<div class="cinema-content">
+  <nav class="filters" aria-label="Фільтри">
+    <div class="filter-group">
+      <h2 class="rail-title">Вік</h2>
+      <div class="chips" id="f-age"></div>
+    </div>
+    <div class="filter-group">
+      <h2 class="rail-title">Категорії</h2>
+      <div class="chips" id="f-cat"></div>
+    </div>
+    <div class="filter-group">
+      <h2 class="rail-title">Формат</h2>
+      <div class="chips" id="f-fmt"></div>
+    </div>
+    <div class="filter-group">
+      <h2 class="rail-title">Теми для розмови</h2>
+      <div class="theme-list" id="f-theme"></div>
+    </div>
+  </nav>
+
+  <section class="cinema-program" aria-labelledby="program-title">
+    <h2 id="program-title">Кінопрограма</h2>
+    <div class="cinema-selection" id="selection"></div>
+    <div class="result-bar">
+      <p class="count" id="count" role="status" aria-live="polite"></p>
+      <button type="button" class="reset" id="reset" hidden>Скинути фільтри</button>
+    </div>
+    <div class="grid" id="grid"></div>
+    <div class="empty" id="empty" hidden>
+      <p class="empty-title">За вашим запитом нічого не знайдено</p>
+      <p>Спробуйте прибрати один із фільтрів або пошукати за іншою назвою.</p>
+      <button type="button" class="btn-primary" id="reset-empty">Скинути фільтри</button>
+    </div>
+    <noscript>
+      <p class="empty-title">Увімкніть JavaScript, щоб користуватися пошуком і фільтрами.</p>
+      <p>Повний каталог також розкладений за темами на окремих сторінках:
+        <a href="temy/druzhba/">дружба</a>, <a href="temy/pidtrymka/">підтримка</a>,
+        <a href="temy/emotsii/">емоції</a>, <a href="temy/dobrota/">доброта</a>,
+        <a href="temy/smilist/">смілість</a>, <a href="temy/simya/">сімʼя</a>,
+        <a href="temy/buty-soboyu/">бути собою</a>, <a href="temy/vtrata/">втрата</a>.</p>
+    </noscript>
+  </section>
+</div>
+</div>
+__FOOTER__
+</div>
+
+<dialog class="modal" id="modal" aria-labelledby="modal-title">
+  <button type="button" class="modal-close" id="modal-close" aria-label="Закрити">&times;</button>
+  <div class="modal-body" id="modal-body"></div>
+</dialog>
+
+<script src="data.js"></script>
+<script src="app.js"></script>
