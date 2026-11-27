@@ -5,11 +5,19 @@ __BAR__
 <header class="cinema-hero">
   <div class="cinema-intro">
     <h1>Вечірня<br>прем’єра</h1>
-    <a class="cinema-cta" href="#program-title">До каталогу <span aria-hidden="true">→</span></a>
+    <a class="cinema-cta" href="#theme-heading">До каталогу <span aria-hidden="true">→</span></a>
   </div>
 </header>
 
 <main id="catalog">
+  <section class="theme-picker" aria-labelledby="theme-heading">
+    <div class="theme-picker-heading">
+      <h2 id="theme-heading">Про що поговоримо?</h2>
+      <button class="chip theme-all" id="all-themes" type="button" aria-pressed="true">Усі теми</button>
+    </div>
+    <div class="theme-tiles" id="f-theme" role="group" aria-labelledby="theme-heading"></div>
+  </section>
+
   <div class="toolbar" aria-label="Пошук та фільтри">
     <form class="search" id="search-form" role="search">
       <svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="currentColor"
@@ -35,8 +43,6 @@ __BAR__
       </details>
     </div>
   </div>
-
-  <div class="theme-list" id="f-theme" role="group" aria-label="Теми для розмови"></div>
 
   <section class="cinema-program" aria-labelledby="program-title">
     <div class="program-heading">
@@ -86,4 +92,4 @@ __FOOTER__
 </dialog>
 
 <script src="data.js"></script>
-<script src="app.js?v=premiere"></script>
+<script src="app.js?v=themes"></script>

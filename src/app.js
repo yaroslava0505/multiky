@@ -98,6 +98,7 @@
     });
     box.appendChild(b);
     filterButtons.push({ button: b, set, value });
+    return b;
   };
 
   const filterButtons = [];
@@ -118,14 +119,30 @@
   chip("Короткі серії", state.fmt, "short", $("program-formats"));
   chip("Повнометражні фільми", state.fmt, "full", $("program-formats"));
 
-  const allThemes = document.createElement("button");
-  allThemes.type = "button";
-  allThemes.className = "chip";
-  allThemes.textContent = "Усі теми";
+  const allThemes = $("all-themes");
   allThemes.addEventListener("click", () => { state.theme.clear(); render(); });
-  $("f-theme").append(allThemes);
-  META.themes.forEach((t) =>
-    chip(THEME_NAMES[t.k] || t.label, state.theme, t.k, $("f-theme")));
+  META.themes.forEach((theme) => {
+    const label = THEME_NAMES[theme.k] || theme.label;
+    const button = chip(label, state.theme, theme.k, $("f-theme"));
+    button.classList.add("theme-btn", "theme-tile");
+    button.style.setProperty("--c", `var(--t-${theme.k})`);
+    const name = document.createElement("span");
+    name.className = "theme-tile-name";
+    name.textContent = label;
+    const tick = document.createElement("span");
+    tick.className = "theme-tile-tick";
+    tick.textContent = "✓";
+    tick.setAttribute("aria-hidden", "true");
+    button.replaceChildren(name, tick);
+    if (HAS_POSTER.has(theme.k)) {
+      const art = document.createElement("img");
+      art.src = `art/${theme.k}.webp`;
+      art.alt = "";
+      art.width = 360;
+      art.height = 152;
+      button.prepend(art);
+    }
+  });
 
   /* ---------- картка ---------- */
   const posterHTML = (m, cls, priority = false) =>
