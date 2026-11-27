@@ -102,7 +102,7 @@ def head(title, desc, prefix, path, extra=""):
         '<link rel="preconnect" href="https://fonts.googleapis.com">',
         '<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>',
         f'<link rel="stylesheet" href="{FONTS}">',
-        f'<link rel="stylesheet" href="{prefix}style.css">',
+        f'<link rel="stylesheet" href="{prefix}style.css?v=premiere">',
         '<link rel="icon" href="data:image/svg+xml,'
         '%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 32 32%22%3E'
         '%3Ctext y=%2226%22 font-size=%2228%22%3E%F0%9F%8E%AC%3C/text%3E%3C/svg%3E">',
@@ -122,8 +122,15 @@ def bar(prefix, current=""):
         parts.append('<a href="%s"%s>%s</a>' % (e(u), cur, e(t)))
     links = "".join(parts)
     home = prefix if prefix else "./"
+    icon = (
+        '<svg viewBox="0 0 40 40" aria-hidden="true" fill="currentColor">'
+        '<path d="M4 15 34 5l-2-5L2 10zM3 17h34v18a3 3 0 0 1-3 3H6a3 3 0 0 1-3-3z"/>'
+        '<path d="m16 22 10 6-10 6z" fill="#fff8ee"/>'
+        '</svg>' if current == "home" else ""
+    )
+    brand = f'{icon}<span>Мультфільми<br>за темами</span>' if icon else 'Мультфільми <span>за темами</span>'
     return (f'<div class="bar"><div class="wrap">'
-            f'<a class="brand" href="{e(home)}">Мультфільми <span>за темами</span></a>'
+            f'<a class="brand" href="{e(home)}">{brand}</a>'
             f'<nav>{links}</nav></div></div>')
 
 
@@ -176,8 +183,13 @@ def where_line(it):
 def card(it, prefix, tag="h2"):
     main = it["th"][0]
     orig = (f'<p class="orig">{e(it["o"])}</p>') if it["o"] != it["t"] else ""
+    poster = (
+        f'<a class="theme-poster" href="{prefix}mult/{e(it["slug"])}/" tabindex="-1" aria-hidden="true">'
+        f'<img src="{prefix}{e(it["poster"])}" alt="" loading="lazy"></a>'
+        if it["slug"] in POSTERS else ""
+    )
     return (f'<article class="item" style="--c:var(--t-{main})">'
-            f'{meta_line(it)}'
+            f'{poster}{meta_line(it)}'
             f'<{tag} class="t"><a href="{prefix}mult/{it["slug"]}/">{e(it["t"])}</a></{tag}>'
             f'{orig}'
             f'<p class="desc">{e(it["desc"])}</p>'

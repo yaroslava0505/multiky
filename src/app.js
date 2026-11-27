@@ -7,6 +7,12 @@
   const MOVIES = window.MOVIES;
   const THEME = Object.fromEntries(META.themes.map((t) => [t.k, t]));
   const FMT = Object.fromEntries(META.formats.map((f) => [f.k, f.label]));
+  const FEATURED = ["bluey", "pisnya-morya", "dumkamy-navyvorit"];
+  const order = (m) => FEATURED.includes(m.id) ? FEATURED.indexOf(m.id) : FEATURED.length;
+  const THEME_NAMES = {
+    friend: "Дружба", help: "Підтримка", feel: "Емоції", kind: "Доброта",
+    brave: "Смілість", family: "Сім’я", self: "Бути собою", loss: "Втрата",
+  };
   const FAV_KEY = "multiky:favorites";
   // які картинки реально лежать у art/ — список підставляє build.py
   const HAS_POSTER = new Set(window.POSTERS || []);
@@ -19,6 +25,7 @@
     cat: new Set(),
     fmt: new Set(),
     theme: new Set(),
+    service: new Set(),
   };
 
   /* ---------- обране ---------- */
@@ -52,7 +59,7 @@
     return many;
   };
   const anyFilter = () =>
-    state.q || state.age.size || state.cat.size || state.fmt.size || state.theme.size;
+    state.q || state.age.size || state.cat.size || state.fmt.size || state.theme.size || state.service.size;
 
   /* ---------- фільтрація ---------- */
   const matchAge = (m) =>
@@ -71,11 +78,12 @@
     MOVIES.filter((m) => {
       if (state.tab === "fav" && !favs.has(m.id)) return false;
       if (!matchAge(m)) return false;
+      if (state.service.size && !state.service.has(META.services[m.service].g)) return false;
       if (state.cat.size && ![...state.cat].every((c) => m.categories.includes(c))) return false;
       if (state.fmt.size && !state.fmt.has(m.format)) return false;
       if (state.theme.size && ![...state.theme].every((k) => m.themes.includes(k))) return false;
       return matchSearch(m);
-    }).sort((a, b) => a.ageMin - b.ageMin || a.title.localeCompare(b.title, "uk"));
+    }).sort((a, b) => order(a) - order(b) || a.ageMin - b.ageMin || a.title.localeCompare(b.title, "uk"));
 
   /* ---------- побудова фільтрів ---------- */
   const chip = (label, set, value, box) => {
@@ -86,53 +94,53 @@
     b.setAttribute("aria-pressed", "false");
     b.addEventListener("click", () => {
       set.has(value) ? set.delete(value) : set.add(value);
-      b.setAttribute("aria-pressed", set.has(value) ? "true" : "false");
       render();
     });
     box.appendChild(b);
+    filterButtons.push({ button: b, set, value });
   };
 
+  const filterButtons = [];
+  const quickFilters = [
+    { id: "f-age", set: state.age, empty: "Усі вікові групи" },
+    { id: "f-fmt", set: state.fmt, empty: "Усі формати" },
+    { id: "f-service", set: state.service, empty: "Усі сервіси" },
+  ];
   META.ageGroups.forEach((g) => chip(g, state.age, g, $("f-age")));
   META.categories.forEach((c) => chip(c, state.cat, c, $("f-cat")));
   META.formats.forEach((f) => chip(f.label, state.fmt, f.k, $("f-fmt")));
+  const serviceGroups = {
+    ua: "sweet.tv / Megogo", nf: "Netflix", atv: "Apple TV",
+    free: "YouTube", rent: "Прокат",
+  };
+  Object.entries(serviceGroups).forEach(([key, label]) =>
+    chip(label, state.service, key, $("f-service")));
+  chip("Короткі серії", state.fmt, "short", $("program-formats"));
+  chip("Повнометражні фільми", state.fmt, "full", $("program-formats"));
 
-  META.themes.forEach((t) => {
-    const n = MOVIES.filter((m) => m.themes.includes(t.k)).length;
-    const b = document.createElement("button");
-    b.type = "button";
-    b.className = "theme-btn";
-    b.style.setProperty("--c", `var(--t-${t.k})`);
-    b.setAttribute("aria-pressed", "false");
-    b.innerHTML =
-      (HAS_POSTER.has(t.k)
-        ? `<img src="art/${t.k}.webp" alt="" width="360" height="152" loading="lazy"` +
-          ` onerror="posterFail(this)">`
-        : "") +
-      `<span class="theme-name"><span>${esc(t.label)}</span><span class="n">${n}</span></span>`;
-    b.addEventListener("click", () => {
-      state.theme.has(t.k) ? state.theme.delete(t.k) : state.theme.add(t.k);
-      b.setAttribute("aria-pressed", state.theme.has(t.k) ? "true" : "false");
-      render();
-    });
-    $("f-theme").appendChild(b);
-  });
+  const allThemes = document.createElement("button");
+  allThemes.type = "button";
+  allThemes.className = "chip";
+  allThemes.textContent = "Усі теми";
+  allThemes.addEventListener("click", () => { state.theme.clear(); render(); });
+  $("f-theme").append(allThemes);
+  META.themes.forEach((t) =>
+    chip(THEME_NAMES[t.k] || t.label, state.theme, t.k, $("f-theme")));
 
   /* ---------- картка ---------- */
-  const posterHTML = (m, cls) =>
+  const posterHTML = (m, cls, priority = false) =>
     `<div class="poster ${cls}" style="--c:var(--t-${m.themes[0]})" ` +
     `data-letter="${esc(m.title.trim()[0])}">` +
     (HAS_POSTER.has(m.id)
-      ? `<img src="${esc(m.poster)}" alt="" loading="lazy" onerror="posterFail(this)">`
+      ? `<img src="${esc(m.poster)}" alt="" ${priority ? 'fetchpriority="high"' : 'loading="lazy"'} onerror="posterFail(this)">`
       : "") +
     `</div>`;
 
-  const cardHTML = (m) => {
-    const cats = m.categories.slice(0, 2).map((c) => `<span class="pill">${esc(c)}</span>`).join("");
-    const rest = m.categories.length > 2 ? `<span class="pill pill-more">+${m.categories.length - 2}</span>` : "";
+  const cardHTML = (m, index) => {
     return (
       `<article class="card" style="--c:var(--t-${m.themes[0]})">` +
-      posterHTML(m, "poster-card") +
-      `<span class="badge">${esc(m.age)}</span>` +
+      posterHTML(m, "poster-card", index < 3) +
+      `<div class="poster-badges"><span>${m.ageMin}+</span><span><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>${esc(m.duration)}</span></div>` +
       `<button type="button" class="fav" data-fav="${esc(m.id)}" ` +
       `aria-pressed="${favs.has(m.id)}" ` +
       `aria-label="${favs.has(m.id) ? "Прибрати з обраного" : "Зберегти в обране"}">` +
@@ -140,31 +148,12 @@
       `<path d="M12 20.3 4.3 12.6a4.6 4.6 0 0 1 0-6.5 4.6 4.6 0 0 1 6.5 0l1.2 1.2 1.2-1.2a4.6 4.6 0 1 1 6.5 6.5z"/>` +
       `</svg></button>` +
       `<div class="card-body">` +
-      `<h3 class="card-title"><button type="button" class="card-open" data-open="${esc(m.id)}">` +
-      `${esc(m.title)}</button></h3>` +
-      `<p class="card-meta">${m.year} · ${esc(m.duration)}</p>` +
-      `<div class="pills">${cats}${rest}</div>` +
+      `<h3 class="card-title">${esc(m.title)}</h3>` +
+      `<button type="button" class="card-open" data-open="${esc(m.id)}" ` +
+      `aria-label="Детальніше про «${esc(m.title)}»">Детальніше <span aria-hidden="true">→</span></button>` +
       `</div></article>`
     );
   };
-
-  /* ---------- добірка «Кінопрограма» ---------- */
-  // показуємо, поки не ввімкнено жодного фільтра; беремо те, для чого є картинка
-  const withArt = MOVIES.filter((m) => HAS_POSTER.has(m.id));
-  const SELECTION = [
-    ["Короткі серії", withArt.filter((m) => m.format !== "full").slice(0, 3)],
-    ["Повнометражні фільми", withArt.filter((m) => m.format === "full").slice(0, 3)],
-  ].filter(([, list]) => list.length);
-
-  $("selection").innerHTML = SELECTION.map(([title, list]) =>
-    `<div><h3>${esc(title)}</h3><ul>` +
-    list.map((m) =>
-      `<li><a href="mult/${esc(m.id)}/" data-open="${esc(m.id)}">` +
-      `<img src="${esc(m.poster)}" alt="" width="234" height="123" loading="lazy" ` +
-      `onerror="posterFail(this)">` +
-      `<strong>${esc(m.title)}</strong>` +
-      `<small>${esc(m.age)} · ${esc(m.duration)}</small></a></li>`).join("") +
-    `</ul></div>`).join("");
 
   /* ---------- модальне вікно ---------- */
   const modal = $("modal");
@@ -240,6 +229,10 @@
   });
 
   /* ---------- панель ---------- */
+  $("search-form").addEventListener("submit", (event) => {
+    event.preventDefault();
+    $("program-title").scrollIntoView({ block: "start" });
+  });
   $("q").addEventListener("input", (ev) => { state.q = ev.target.value.trim(); render(); });
 
   document.querySelectorAll(".tabs button").forEach((b) => {
@@ -253,10 +246,8 @@
 
   const resetAll = () => {
     state.q = "";
-    [state.age, state.cat, state.fmt, state.theme].forEach((s) => s.clear());
+    [state.age, state.cat, state.fmt, state.theme, state.service].forEach((s) => s.clear());
     $("q").value = "";
-    document.querySelectorAll(".chip, .theme-btn").forEach((b) =>
-      b.setAttribute("aria-pressed", "false"));
     render();
   };
   $("reset").addEventListener("click", resetAll);
@@ -279,7 +270,14 @@
         : `Знайдено: ${n} ${plural(n, "мультфільм", "мультфільми", "мультфільмів")}`;
 
     $("reset").hidden = !anyFilter();
-    $("selection").hidden = Boolean(anyFilter() || state.tab !== "all");
+    allThemes.setAttribute("aria-pressed", !state.theme.size);
+    filterButtons.forEach(({ button, set, value }) =>
+      button.setAttribute("aria-pressed", set.has(value)));
+    quickFilters.forEach(({ id, set, empty }) => {
+      const label = $(id).parentElement.querySelector(".filter-value");
+      const selected = filterButtons.find((entry) => entry.set === set && set.has(entry.value));
+      label.textContent = set.size > 1 ? `Обрано: ${set.size}` : selected?.button.textContent || empty;
+    });
     $("empty").hidden = n > 0 || (state.tab === "fav" && !anyFilter());
     $("grid").innerHTML = list.map(cardHTML).join("");
     $("fav-count").textContent = favs.size;

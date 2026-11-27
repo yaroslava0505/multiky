@@ -4,55 +4,58 @@ __BAR__
 
 <header class="cinema-hero">
   <div class="cinema-intro">
-    <p class="eyebrow">Каталог для батьків і вихователів</p>
-    <h1>Кінозали за темами</h1>
-    <p class="lede">Оберіть мультфільм і знайдіть питання для розмови після перегляду.</p>
+    <h1>Вечірня<br>прем’єра</h1>
+    <a class="cinema-cta" href="#program-title">До каталогу <span aria-hidden="true">→</span></a>
   </div>
 </header>
 
-<div class="toolbar" role="search">
-  <label class="search">
-    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-      stroke-width="2.2" aria-hidden="true"><circle cx="11" cy="11" r="7"></circle>
-      <path d="M20 20l-4.3-4.3"></path></svg>
-    <input id="q" type="search" autocomplete="off"
-      placeholder="Назва українською, оригінальна назва або слово з опису"
-      aria-label="Пошук мультфільму">
-  </label>
-  <div class="tabs" role="group" aria-label="Список">
-    <button type="button" data-tab="all" aria-pressed="true">Усі</button>
-    <button type="button" data-tab="fav" aria-pressed="false">
-      Збережені <span class="fav-count" id="fav-count">0</span>
-    </button>
+<main id="catalog">
+  <div class="toolbar" aria-label="Пошук та фільтри">
+    <form class="search" id="search-form" role="search">
+      <svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+        stroke-width="2.2" aria-hidden="true"><circle cx="10" cy="10" r="6"></circle>
+        <path d="M15 15l5 5"></path></svg>
+      <input id="q" type="search" autocomplete="off"
+        placeholder="Пошук мультфільму, теми або запиту…"
+        aria-label="Пошук мультфільму">
+      <button type="submit">Пошук</button>
+    </form>
+    <div class="quick-filters" role="group" aria-label="Фільтри каталогу">
+      <details class="quick-filter">
+        <summary>Вік <span class="filter-value">Усі вікові групи</span></summary>
+        <div class="chips" id="f-age"></div>
+      </details>
+      <details class="quick-filter">
+        <summary>Формат <span class="filter-value">Усі формати</span></summary>
+        <div class="chips" id="f-fmt"></div>
+      </details>
+      <details class="quick-filter">
+        <summary>Сервіс <span class="filter-value">Усі сервіси</span></summary>
+        <div class="chips" id="f-service"></div>
+      </details>
+    </div>
   </div>
-  <button type="button" class="btn-random" id="random">
-    <span aria-hidden="true">🎲</span> Випадковий мультик
-  </button>
-</div>
 
-<div class="cinema-content">
-  <nav class="filters" aria-label="Фільтри">
-    <div class="filter-group">
-      <h2 class="rail-title">Вік</h2>
-      <div class="chips" id="f-age"></div>
-    </div>
-    <div class="filter-group">
-      <h2 class="rail-title">Категорії</h2>
-      <div class="chips" id="f-cat"></div>
-    </div>
-    <div class="filter-group">
-      <h2 class="rail-title">Формат</h2>
-      <div class="chips" id="f-fmt"></div>
-    </div>
-    <div class="filter-group">
-      <h2 class="rail-title">Теми для розмови</h2>
-      <div class="theme-list" id="f-theme"></div>
-    </div>
-  </nav>
+  <div class="theme-list" id="f-theme" role="group" aria-label="Теми для розмови"></div>
 
   <section class="cinema-program" aria-labelledby="program-title">
-    <h2 id="program-title">Кінопрограма</h2>
-    <div class="cinema-selection" id="selection"></div>
+    <div class="program-heading">
+      <h2 id="program-title"><svg viewBox="0 0 24 24" width="30" height="30" aria-hidden="true"><circle cx="12" cy="12" r="11" fill="currentColor"/><path d="M12 5h.01M19 10h.01M16 18h.01M8 18h.01M5 10h.01" fill="none" stroke="#fff8ee" stroke-width="3.2" stroke-linecap="round"/></svg> Кінопрограма</h2>
+      <div class="chips" id="program-formats" role="group" aria-label="Добірки за форматом"></div>
+    </div>
+    <div class="catalog-utilities">
+      <div class="tabs" role="group" aria-label="Список">
+        <button type="button" data-tab="all" aria-pressed="true">Усі</button>
+        <button type="button" data-tab="fav" aria-pressed="false">
+          Збережені <span class="fav-count" id="fav-count">0</span>
+        </button>
+      </div>
+      <button type="button" class="btn-random" id="random">Випадковий мультик</button>
+      <details class="quick-filter category-filter">
+        <summary>Категорії</summary>
+        <div class="chips" id="f-cat"></div>
+      </details>
+    </div>
     <div class="result-bar">
       <p class="count" id="count" role="status" aria-live="polite"></p>
       <button type="button" class="reset" id="reset" hidden>Скинути фільтри</button>
@@ -72,7 +75,7 @@ __BAR__
         <a href="temy/buty-soboyu/">бути собою</a>, <a href="temy/vtrata/">втрата</a>.</p>
     </noscript>
   </section>
-</div>
+</main>
 </div>
 __FOOTER__
 </div>
@@ -83,4 +86,4 @@ __FOOTER__
 </dialog>
 
 <script src="data.js"></script>
-<script src="app.js"></script>
+<script src="app.js?v=premiere"></script>
