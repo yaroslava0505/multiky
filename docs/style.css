@@ -544,17 +544,30 @@ footer.site p{margin:0;max-width:70ch}
   position:relative;display:grid;grid-template-rows:auto 1fr;gap:0;
   width:100%;min-width:0;min-height:76px;padding:0;overflow:hidden;
   border:1px solid color-mix(in srgb,var(--c) 35%,#f0d4b2);border-radius:12px;
-  background:#fffdf7;color:var(--ink);text-align:left
+  background:#fffdf7;color:var(--ink);text-align:left;
+  transition:transform .16s ease, box-shadow .16s ease, border-color .16s ease
+}
+.theme-tile-art{
+  display:block;
+  background:color-mix(in srgb,var(--c) 30%,#f6eadd);
+  overflow:hidden
 }
 .theme-tile img{
-  display:block;width:100%;height:auto;aspect-ratio:2.6;object-fit:cover;object-position:center top
+  display:block;width:100%;height:auto;aspect-ratio:2.6;object-fit:cover;object-position:center top;
+  filter:grayscale(1) contrast(.82);
+  mix-blend-mode:multiply;opacity:.49
 }
 .theme-tile-name{
   display:flex;align-items:center;min-height:40px;padding:5px 8px;
   border-bottom:3px solid var(--c);font-weight:800;line-height:1.15;
   overflow-wrap:anywhere
 }
-.cinema-home .theme-tile:hover{border-color:var(--c);box-shadow:0 3px 9px #36190f2b}
+@media(hover:hover){
+  .cinema-home .theme-tile:hover{
+    border-color:var(--c);box-shadow:0 4px 10px #36190f26;transform:translateY(-2px)
+  }
+}
+.cinema-home .theme-tile:active{transform:scale(.96)}
 .cinema-home .theme-tile[aria-pressed="true"]{
   border-color:var(--c);outline:2px solid var(--c);outline-offset:1px;
   background:var(--c);color:#fff
@@ -564,7 +577,17 @@ footer.site p{margin:0;max-width:70ch}
   position:absolute;top:5px;right:5px;display:none;place-items:center;
   width:23px;height:23px;border-radius:50%;background:#fffdf7;color:var(--c);font-weight:900
 }
-.theme-tile[aria-pressed="true"] .theme-tile-tick{display:grid}
+.theme-tile[aria-pressed="true"] .theme-tile-tick{
+  display:grid;animation:theme-tick-in .23s ease-out both
+}
+@keyframes theme-tick-in{
+  from{opacity:0;transform:scale(.5)}
+  70%{transform:scale(1.14)}
+  to{opacity:1;transform:scale(1)}
+}
+@media(prefers-reduced-motion:reduce){
+  .cinema-home .theme-tile:hover,.cinema-home .theme-tile:active{transform:none}
+}
 @media(max-width:1080px){.theme-tiles{grid-template-columns:repeat(4,minmax(0,1fr))}}
 @media(max-width:540px){
   .theme-tile-name{font-size:12px;padding-inline:4px}

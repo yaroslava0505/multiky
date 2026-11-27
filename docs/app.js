@@ -140,7 +140,11 @@
       art.alt = "";
       art.width = 360;
       art.height = 152;
-      button.prepend(art);
+      const frame = document.createElement("span");
+      frame.className = "theme-tile-art";
+      frame.setAttribute("aria-hidden", "true");
+      frame.append(art);
+      button.prepend(frame);
     }
   });
 

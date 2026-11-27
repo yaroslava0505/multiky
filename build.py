@@ -102,7 +102,7 @@ def head(title, desc, prefix, path, extra=""):
         '<link rel="preconnect" href="https://fonts.googleapis.com">',
         '<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>',
         f'<link rel="stylesheet" href="{FONTS}">',
-        f'<link rel="stylesheet" href="{prefix}style.css?v=themes">',
+        f'<link rel="stylesheet" href="{prefix}style.css?v=muted-themes">',
         '<link rel="icon" href="data:image/svg+xml,'
         '%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 32 32%22%3E'
         '%3Ctext y=%2226%22 font-size=%2228%22%3E%F0%9F%8E%AC%3C/text%3E%3C/svg%3E">',
